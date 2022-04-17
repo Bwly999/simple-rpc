@@ -1,4 +1,4 @@
-package com.github.bwly.utils.zookeeper;
+package com.github.bwly.rpc.core.utils.zookeeper;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

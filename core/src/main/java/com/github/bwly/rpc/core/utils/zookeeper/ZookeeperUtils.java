@@ -1,4 +1,4 @@
-package com.github.bwly.utils.zookeeper;
+package com.github.bwly.rpc.core.utils.zookeeper;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
