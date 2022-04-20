@@ -17,6 +17,10 @@ public class ServiceConfig {
     private Object service;
 
     public String getServiceName() {
-        return this.getGroup() + this.getVersion();
+        return this.service.getClass().getInterfaces()[0].getCanonicalName();
+    }
+
+    public String getRpcServiceName() {
+        return this.getServiceName() + this.getGroup() + this.getVersion();
     }
 }
