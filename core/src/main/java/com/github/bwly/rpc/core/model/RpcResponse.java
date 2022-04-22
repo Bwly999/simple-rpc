@@ -2,12 +2,14 @@ package com.github.bwly.rpc.core.model;
 
 import com.github.bwly.rpc.core.constants.RcpResponseCode;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class RpcResponse {
     private String requestId;
 

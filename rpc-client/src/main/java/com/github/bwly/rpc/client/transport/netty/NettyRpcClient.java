@@ -1,9 +1,10 @@
-package com.github.bwly.rpc.client;
+package com.github.bwly.rpc.client.transport.netty;
 
 import com.github.bwly.rpc.client.discovery.ServiceDiscovery;
 import com.github.bwly.rpc.client.discovery.ZookeeperDiscovery;
-import com.github.bwly.rpc.client.netty.handler.NettyRpcClientHandler;
-import com.github.bwly.rpc.client.netty.handler.PendingRpc;
+import com.github.bwly.rpc.client.transport.netty.handler.NettyRpcClientHandler;
+import com.github.bwly.rpc.client.transport.netty.handler.PendingRpc;
+import com.github.bwly.rpc.client.transport.RpcTransport;
 import com.github.bwly.rpc.core.codec.RpcDecoder;
 import com.github.bwly.rpc.core.codec.RpcEncoder;
 import com.github.bwly.rpc.core.model.RpcRequest;
@@ -29,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 
 @Slf4j
-public class NettyRpcClient {
+public class NettyRpcClient implements RpcTransport {
     private final ServiceDiscovery serviceDiscovery;
 
     private final EventLoopGroup eventLoopGroup;
@@ -73,6 +74,7 @@ public class NettyRpcClient {
         this(new ZookeeperDiscovery());
     }
 
+    @Override
     public Object sendRpcRequest(RpcRequest rpcRequest) {
         // build return value
         CompletableFuture<RpcResponse> resultFuture = new CompletableFuture<>();

@@ -1,11 +1,10 @@
 package com.github.bwly.rpc.server.service;
 
 import com.github.bwly.rpc.core.exception.NoSuchServiceException;
-import com.github.bwly.rpc.server.netty.NettyRpcServer;
+import com.github.bwly.rpc.core.model.ServiceConfig;
 import com.github.bwly.rpc.server.registry.ServiceRegister;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;

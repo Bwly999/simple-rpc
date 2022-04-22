@@ -1,4 +1,4 @@
-package com.github.bwly.rpc.server.service;
+package com.github.bwly.rpc.core.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +21,6 @@ public class ServiceConfig {
     }
 
     public String getRpcServiceName() {
-        return this.getServiceName() + this.getGroup() + this.getVersion();
+        return this.getGroup() + this.getServiceName() + this.getVersion();
     }
 }

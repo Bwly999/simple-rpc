@@ -1,7 +1,7 @@
 package com.github.bwly.rpc.server.autowire;
 
 import com.github.bwly.rpc.core.annotation.RpcService;
-import com.github.bwly.rpc.server.service.ServiceConfig;
+import com.github.bwly.rpc.core.model.ServiceConfig;
 import com.github.bwly.rpc.server.service.ServiceManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;

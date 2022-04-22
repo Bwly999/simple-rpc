@@ -1,4 +1,4 @@
-package com.github.bwly.rpc.client.netty.handler;
+package com.github.bwly.rpc.client.transport.netty.handler;
 
 import com.github.bwly.rpc.core.model.RpcResponse;
 
