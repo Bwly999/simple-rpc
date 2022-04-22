@@ -12,7 +12,7 @@ import java.util.List;
 @Slf4j
 public class ZookeeperDiscovery implements ServiceDiscovery{
     @Override
-    public InetAddress findService(RpcRequest rpcRequest) {
+    public InetSocketAddress findService(RpcRequest rpcRequest) {
         String serviceName = rpcRequest.getServiceName();
         List<String> serviceUrlList = ZookeeperUtils.getChildrenNodes(serviceName);
         String targetServiceUrl = serviceUrlList.get(0);
