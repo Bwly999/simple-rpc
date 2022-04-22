@@ -16,29 +16,34 @@ import org.springframework.context.annotation.Configuration;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-@Configuration
 @Slf4j
-public class ZookeeperUtils implements InitializingBean {
+public class ZookeeperUtils {
     public static final String ZK_REGISTER_ROOT_PATH = "/my-rpc";
     private static final Map<String, List<String>> SERVICE_ADDRESS_MAP = new ConcurrentHashMap<>();
     private static final Set<String> REGISTERED_PATH_SET = ConcurrentHashMap.newKeySet();
 
     private static CuratorFramework zkClient;
 
-    @Autowired
-    private ZookeeperProperties properties;
+    private static String host = "127.0.0.1";
+    private static int port = 2181;
+    private static int baseSleepTime = 1000;
+    private static int maxRetries = 3;
+    private static String namespace = "simple-rpc";
 
-    @Override
-    public void afterPropertiesSet() {
+    static {
+        init();
+    }
+
+    private static void init() {
+        String connectString = host + ":" + port;
         ZookeeperUtils.zkClient = CuratorFrameworkFactory.builder()
-                .namespace(properties.getNamespace())
-                .connectString(properties.getConnectString())
-                .retryPolicy(new ExponentialBackoffRetry(properties.getBaseSleepTime(), properties.getMaxRetries()))
+                .namespace(namespace)
+                .connectString(connectString)
+                .retryPolicy(new ExponentialBackoffRetry(baseSleepTime, maxRetries))
                 .build();
 
         ZookeeperUtils.zkClient.start();
@@ -52,7 +57,8 @@ public class ZookeeperUtils implements InitializingBean {
         }
     }
 
-    public static void createPersistentNode(String path) {
+    public static void createPersistentNode(String servicePath) {
+        String path = ZK_REGISTER_ROOT_PATH + "/" + servicePath;
         try {
             if (REGISTERED_PATH_SET.contains(path) || zkClient.checkExists().forPath(path) != null) {
                 log.info("The node already exists. The node is:[{}]", path);

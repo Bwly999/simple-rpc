@@ -13,12 +13,19 @@ import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Component
+
 @Slf4j
 public class ServiceManager {
     private final Map<String, Object> serviceMap = new ConcurrentHashMap<>();
 
     private ServiceRegister serviceRegister;
+
+    private int port;
+
+    public ServiceManager(ServiceRegister serviceRegister, int port) {
+        this.serviceRegister = serviceRegister;
+        this.port = port;
+    }
 
     public void setServiceRegistry(ServiceRegister serviceRegister) {
         this.serviceRegister = serviceRegister;
@@ -37,7 +44,7 @@ public class ServiceManager {
             String host = InetAddress.getLocalHost().getHostAddress();
             String rpcServiceName = serviceConfig.getRpcServiceName();
 
-            serviceRegister.registerService(rpcServiceName, new InetSocketAddress(host, NettyRpcServer.getPort()));
+            serviceRegister.registerService(rpcServiceName, new InetSocketAddress(host, port));
 
             if (serviceMap.containsKey(rpcServiceName)) {
                 return;

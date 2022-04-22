@@ -3,11 +3,16 @@ package com.github.bwly.rpc.server.netty;
 import com.github.bwly.rpc.core.codec.RpcDecoder;
 import com.github.bwly.rpc.core.codec.RpcEncoder;
 import com.github.bwly.rpc.core.model.RpcRequest;
+import com.github.bwly.rpc.core.serialize.ProtobufSerializer;
 import com.github.bwly.rpc.core.serialize.Serializer;
 import com.github.bwly.rpc.core.utils.BeanUtils;
 import com.github.bwly.rpc.core.utils.ThreadFactoryUtils;
+import com.github.bwly.rpc.server.RpcServer;
 import com.github.bwly.rpc.server.handler.RequestHandler;
 import com.github.bwly.rpc.server.netty.handler.NettyRpcServerHandler;
+import com.github.bwly.rpc.server.registry.ServiceRegister;
+import com.github.bwly.rpc.server.registry.ZookeeperServiceRegister;
+import com.github.bwly.rpc.server.service.ServiceConfig;
 import com.github.bwly.rpc.server.service.ServiceManager;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -18,6 +23,7 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetAddress;
@@ -25,22 +31,40 @@ import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class NettyRpcServer {
-    private static final int DEFAULT_PORT = 9999;
-    private static int port;
+@Builder
+public class NettyRpcServer extends RpcServer {
+    @Builder.Default
+    private int port = 11451;
+
+    @Builder.Default
+    private Serializer serializer = new ProtobufSerializer();
+
+    @Builder.Default
+    private ServiceRegister serviceRegister = new ZookeeperServiceRegister();
+
+    private ServiceManager serviceManager;
+
+    private ServiceManager getServiceManager() {
+        return new ServiceManager(serviceRegister, port);
+    }
 
     public NettyRpcServer() {
-        NettyRpcServer.port = DEFAULT_PORT;
+        this.serviceManager = new ServiceManager(serviceRegister, port);
     }
 
     public NettyRpcServer(int port) {
-        NettyRpcServer.port = port;
+        this.port = port;
+        this.serviceManager = new ServiceManager(serviceRegister, port);
     }
 
-    public static int getPort() {
-        return port;
+    public NettyRpcServer(int port, Serializer serializer, ServiceRegister serviceRegister) {
+        this.port = port;
+        this.serializer = serializer;
+        this.serviceRegister = serviceRegister;
+        this.serviceManager = new ServiceManager(serviceRegister, port);
     }
 
+    @Override
     public void start() {
         log.info("NettyRpcServer start");
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
@@ -50,8 +74,7 @@ public class NettyRpcServer {
         DefaultEventExecutorGroup serviceHandlerGroup = new DefaultEventExecutorGroup(cpuNum * 2,
                 ThreadFactoryUtils.createThreadFactory("rpc-service-handler-thread"));
 
-        Serializer serializer = BeanUtils.getBean(Serializer.class);
-        ServiceManager serviceManager = BeanUtils.getBean(ServiceManager.class);
+        ServiceManager serviceManager = new ServiceManager(this.serviceRegister, port);
         try {
             ServerBootstrap serverBootstrap = new ServerBootstrap();
             serverBootstrap.group(bossGroup, workerGroup)
@@ -88,5 +111,14 @@ public class NettyRpcServer {
             workerGroup.shutdownGracefully();
             serviceHandlerGroup.shutdownGracefully();
         }
+    }
+
+    @Override
+    public void stop() {
+
+    }
+
+    public void registerService(ServiceConfig serviceConfig) {
+        serviceManager.publishService(serviceConfig);
     }
 }

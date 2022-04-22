@@ -1,6 +1,6 @@
 package com.github.bwly.rpc.server;
 
-public abstract class Server {
+public abstract class RpcServer {
     /**
      * 启动服务
      */

@@ -9,7 +9,7 @@ public class ZookeeperServiceRegister implements ServiceRegister {
 
     @Override
     public void registerService(String serviceName, InetSocketAddress inetSocketAddress) {
-        String servicePath = ZookeeperUtils.ZK_REGISTER_ROOT_PATH + "/" + serviceName + inetSocketAddress.toString();
+        String servicePath = serviceName + inetSocketAddress.toString();
         ZookeeperUtils.createPersistentNode(servicePath);
     }
 }
