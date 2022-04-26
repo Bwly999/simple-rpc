@@ -19,6 +19,6 @@ public class RpcRequest {
     private String version;
 
     public String getServiceName() {
-        return this.group + this.className + this.version;
+        return this.group + ":" + this.className + ":" + this.version;
     }
 }

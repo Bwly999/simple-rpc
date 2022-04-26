@@ -3,10 +3,12 @@ package com.github.bwly.rpc.server.netty;
 import com.github.bwly.rpc.core.codec.RpcDecoder;
 import com.github.bwly.rpc.core.codec.RpcEncoder;
 import com.github.bwly.rpc.core.model.RpcRequest;
+import com.github.bwly.rpc.core.model.RpcResponse;
 import com.github.bwly.rpc.core.serialize.ProtobufSerializer;
 import com.github.bwly.rpc.core.serialize.Serializer;
 import com.github.bwly.rpc.core.utils.ThreadFactoryUtils;
 import com.github.bwly.rpc.server.RpcServer;
+import com.github.bwly.rpc.server.config.CustomShutdownHook;
 import com.github.bwly.rpc.server.handler.RequestHandler;
 import com.github.bwly.rpc.server.netty.handler.NettyRpcServerHandler;
 import com.github.bwly.rpc.server.registry.ServiceRegister;
@@ -22,6 +24,7 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,15 +33,12 @@ import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@Builder
+@AllArgsConstructor
 public class NettyRpcServer extends RpcServer {
-    @Builder.Default
     private int port = 11451;
 
-    @Builder.Default
     private Serializer serializer = new ProtobufSerializer();
 
-    @Builder.Default
     private ServiceRegister serviceRegister = new ZookeeperServiceRegister();
 
     private ServiceManager serviceManager;
@@ -65,6 +65,8 @@ public class NettyRpcServer extends RpcServer {
 
     @Override
     public void start() {
+        CustomShutdownHook shutdownHook = new CustomShutdownHook(port);
+        shutdownHook.mount();
         log.info("NettyRpcServer start");
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -73,7 +75,6 @@ public class NettyRpcServer extends RpcServer {
         DefaultEventExecutorGroup serviceHandlerGroup = new DefaultEventExecutorGroup(cpuNum * 2,
                 ThreadFactoryUtils.createThreadFactory("rpc-service-handler-thread"));
 
-        ServiceManager serviceManager = new ServiceManager(this.serviceRegister, port);
         try {
             ServerBootstrap serverBootstrap = new ServerBootstrap();
             serverBootstrap.group(bossGroup, workerGroup)
@@ -93,7 +94,7 @@ public class NettyRpcServer extends RpcServer {
                             ChannelPipeline p = ch.pipeline();
                             p.addLast(new IdleStateHandler(30, 0, 0, TimeUnit.SECONDS));
                             p.addLast(new RpcDecoder(serializer, RpcRequest.class));
-                            p.addLast(new RpcEncoder(serializer, RpcRequest.class));
+                            p.addLast(new RpcEncoder(serializer, RpcResponse.class));
                             p.addLast(serviceHandlerGroup, new NettyRpcServerHandler(new RequestHandler(serviceManager)));
                         }
                     });
@@ -118,6 +119,7 @@ public class NettyRpcServer extends RpcServer {
 
     }
 
+    @Override
     public void registerService(ServiceConfig serviceConfig) {
         serviceManager.publishService(serviceConfig);
     }

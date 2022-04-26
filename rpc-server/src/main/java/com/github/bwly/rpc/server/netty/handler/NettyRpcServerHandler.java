@@ -5,6 +5,7 @@ import com.github.bwly.rpc.core.model.RpcRequest;
 import com.github.bwly.rpc.core.model.RpcResponse;
 import com.github.bwly.rpc.core.utils.ThreadFactoryUtils;
 import com.github.bwly.rpc.server.handler.RequestHandler;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -50,7 +51,7 @@ public class NettyRpcServerHandler extends SimpleChannelInboundHandler<RpcReques
         }
 
         // 发送失败时，关闭连接
-        channelHandlerContext.writeAndFlush(rpcResponse).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);;
+        channelHandlerContext.writeAndFlush(rpcResponse).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
     }
 
     @Override

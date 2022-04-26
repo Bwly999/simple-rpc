@@ -10,17 +10,21 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ServiceConfig {
-    private String group = "";
+    private String group = "default";
 
-    private String version = "";
+    private String version = "1.0";
 
     private Object service;
+
+    public ServiceConfig(Object service) {
+        this.service = service;
+    }
 
     public String getServiceName() {
         return this.service.getClass().getInterfaces()[0].getCanonicalName();
     }
 
     public String getRpcServiceName() {
-        return this.getGroup() + this.getServiceName() + this.getVersion();
+        return this.getGroup() + ":" + this.getServiceName() + ":" + this.getVersion();
     }
 }

@@ -18,6 +18,7 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
@@ -49,7 +50,7 @@ public class NettyRpcClient implements RpcTransport {
         this.serviceDiscovery = serviceDiscovery;
         this.serializer = new ProtobufSerializer();
         this.pendingRpc = PendingRpc.getInstance();
-        this.eventLoopGroup = new NioEventLoopGroup();
+        this.eventLoopGroup = new NioEventLoopGroup(5);
         this.bootstrap = new Bootstrap();
         bootstrap.group(eventLoopGroup)
                 .channel(NioSocketChannel.class)
@@ -62,9 +63,10 @@ public class NettyRpcClient implements RpcTransport {
                     protected void initChannel(SocketChannel ch) {
                         ChannelPipeline p = ch.pipeline();
                         // If no data is sent to the server within 15 seconds, a heartbeat request is sent
-                        p.addLast(new IdleStateHandler(30, 0, 0, TimeUnit.SECONDS));
-                        p.addLast(new RpcDecoder(serializer, RpcRequest.class));
+//                        p.addLast(new IdleStateHandler(30, 0, 0, TimeUnit.SECONDS));
                         p.addLast(new RpcEncoder(serializer, RpcRequest.class));
+                        p.addLast(new LengthFieldBasedFrameDecoder(65536, 0, 4, 0, 0));
+                        p.addLast(new RpcDecoder(serializer, RpcResponse.class));
                         p.addLast(new NettyRpcClientHandler());
                     }
                 });
@@ -82,7 +84,7 @@ public class NettyRpcClient implements RpcTransport {
         InetSocketAddress inetSocketAddress = serviceDiscovery.findService(rpcRequest);
         // get  server address related channel
         Channel channel = getChannel(inetSocketAddress);
-        if (channel.isActive()) {
+        if (channel != null && channel.isActive()) {
             // put unprocessed request
             pendingRpc.put(rpcRequest.getRequestId(), resultFuture);
             channel.writeAndFlush(rpcRequest).addListener((ChannelFutureListener) future -> {
@@ -118,7 +120,12 @@ public class NettyRpcClient implements RpcTransport {
     public Channel getChannel(InetSocketAddress inetSocketAddress) {
         Channel channel = channelCache.get(inetSocketAddress);
         if (channel == null) {
-            channel = doConnect(inetSocketAddress);
+            try {
+                channel = doConnect(inetSocketAddress);
+            } catch (Exception e) {
+                log.error("Connect failed:", e);
+                return null;
+            }
             channelCache.put(inetSocketAddress, channel);
         }
         return channel;
